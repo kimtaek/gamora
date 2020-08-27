@@ -8,16 +8,16 @@ import (
 	"golang.org/x/text/language"
 )
 
-type config struct {
+type Configure struct {
 	SupportLanguages []language.Tag
 }
 
-var c config
+var Config Configure
 
 func Setup() {
-	_ = env.Parse(&c)
+	_ = env.Parse(&Config)
 
-	c.SupportLanguages = []language.Tag{
+	Config.SupportLanguages = []language.Tag{
 		language.English,            // en
 		language.Korean,             // ko
 		language.MustParse("ko-Kr"), //ko-Kr
@@ -31,7 +31,7 @@ func GetLanguage(ctx *gin.Context) string {
 		return "ko"
 	}
 
-	matcher := language.NewMatcher(c.SupportLanguages)
+	matcher := language.NewMatcher(Config.SupportLanguages)
 	t, i := language.MatchStrings(matcher, accept)
 
 	switch i {

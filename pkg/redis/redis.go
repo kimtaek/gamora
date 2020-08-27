@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type config struct {
+type Configure struct {
 	Mode      string `env:"APP_MODE" envDefault:"debug"`
 	Host      string `env:"REDIS_HOST" envDefault:"localhost"`
 	Port      string `env:"REDIS_PORT" envDefault:"6379"`
@@ -21,23 +21,23 @@ type config struct {
 	MaxActive int    `env:"REDIS_MAX_ACTIVE" envDefault:"10"`
 }
 
-var c config
+var Config Configure
 var p *redis.Pool
 
 func Setup() {
-	_ = env.Parse(&c)
+	_ = env.Parse(&Config)
 	conTimeout := redis.DialConnectTimeout(240 * time.Second)
 	readTimeout := redis.DialReadTimeout(240 * time.Second)
 	writeTimeout := redis.DialWriteTimeout(240 * time.Second)
-	password := redis.DialPassword(c.Password)
-	database := redis.DialDatabase(c.Database)
+	password := redis.DialPassword(Config.Password)
+	database := redis.DialDatabase(Config.Database)
 	p = &redis.Pool{
-		MaxIdle:     c.MaxIdle,
-		MaxActive:   c.MaxActive,
+		MaxIdle:     Config.MaxIdle,
+		MaxActive:   Config.MaxActive,
 		IdleTimeout: 240 * time.Second,
 		Wait:        true,
 		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", c.Host+":"+c.Port, password,
+			c, err := redis.Dial("tcp", Config.Host+":"+Config.Port, password,
 				readTimeout, writeTimeout, conTimeout, database)
 			if err != nil {
 				return nil, err
@@ -82,7 +82,7 @@ func Get(key string) ([]byte, error) {
 	defer conn.Close()
 
 	var data []byte
-	data, err := redis.Bytes(conn.Do("GET", prefix()+key))
+	data, err := redis.Bytes(conn.Do("GET", key))
 	if err != nil {
 		return data, err
 	}
@@ -93,7 +93,7 @@ func Set(key string, value []byte, seconds int) error {
 	conn := p.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("SET", prefix()+key, value)
+	_, err := conn.Do("SET", key, value)
 	if err != nil {
 		v := string(value)
 		if len(v) > 15 {
@@ -102,7 +102,7 @@ func Set(key string, value []byte, seconds int) error {
 		return err
 	}
 	if seconds != 0 {
-		_, _ = conn.Do("EXPIRE", prefix()+key, seconds)
+		_, _ = conn.Do("EXPIRE", key, seconds)
 	}
 	return err
 }
@@ -111,9 +111,9 @@ func Exist(key string) (bool, error) {
 	conn := p.Get()
 	defer conn.Close()
 
-	ok, err := redis.Bool(conn.Do("EXISTS", prefix()+key))
+	ok, err := redis.Bool(conn.Do("EXISTS", key))
 	if err != nil {
-		return ok, fmt.Errorf("error checking if key %s exists: %v", prefix()+key, err)
+		return ok, fmt.Errorf("error checking if key %s exists: %v", key, err)
 	}
 	return ok, err
 }
@@ -122,7 +122,7 @@ func Delete(key string) error {
 	conn := p.Get()
 	defer conn.Close()
 
-	_, err := conn.Do("DEL", prefix()+key)
+	_, err := conn.Do("DEL", key)
 	return err
 }
 
@@ -164,14 +164,6 @@ func SetExpires(key string, seconds int) {
 	defer conn.Close()
 
 	if seconds != 0 {
-		_, _ = conn.Do("EXPIRE", prefix()+key, seconds)
+		_, _ = conn.Do("EXPIRE", key, seconds)
 	}
-}
-
-func prefix() string {
-	if c.Mode == "release" {
-		return "production_api_cache:"
-	}
-
-	return "dev_api_cache:"
 }

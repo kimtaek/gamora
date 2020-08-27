@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-type config struct {
+type Configure struct {
 	Mode               string `env:"APP_MODE" envDefault:"debug"`
 	AccessKey          string `env:"AWS_ACCESS_KEY" envDefault:"AKIAZI..."`
 	SecretAccessKey    string `env:"AWS_SECRET_KEY" envDefault:"MT+8FpEPD..."`
@@ -24,10 +24,10 @@ type config struct {
 	UniversalTelephone string `env:"UNIVERSAL_TELEPHONE" envDefault:""`
 }
 
-var c config
+var Config Configure
 
 func Setup() {
-	_ = env.Parse(&c)
+	_ = env.Parse(&Config)
 }
 
 type manager struct {
@@ -40,10 +40,10 @@ func NewAws() *manager {
 	s := session.Must(session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
 			Credentials: credentials.NewStaticCredentialsFromCreds(credentials.Value{
-				AccessKeyID:     c.AccessKey,
-				SecretAccessKey: c.SecretAccessKey,
+				AccessKeyID:     Config.AccessKey,
+				SecretAccessKey: Config.SecretAccessKey,
 			}),
-			Region: aws.String(c.S3Region),
+			Region: aws.String(Config.S3Region),
 		},
 	}))
 
@@ -54,12 +54,12 @@ func NewAws() *manager {
 }
 
 func (a *manager) SendSMS(phoneNumber string, message string) error {
-	if c.UniversalTelephone == "82-1000000000" {
+	if Config.UniversalTelephone == "82-1000000000" {
 		return nil
 	}
 
-	if c.UniversalTelephone != "" {
-		phoneNumber = c.UniversalTelephone
+	if Config.UniversalTelephone != "" {
+		phoneNumber = Config.UniversalTelephone
 	}
 
 	service := sns.New(a.Session)
@@ -80,11 +80,10 @@ func (a *manager) SendSMS(phoneNumber string, message string) error {
 
 func (a *manager) Upload(file multipart.File, fileName string, extension string) (url string, version *string, err error) {
 	if fileName == "" {
-		return "", nil, errors.New("파일명을 찾을수 없습니다.")
+		return "", nil, errors.New("file name not found")
 	}
 
 	var contentType string
-
 	switch strings.ToLower(extension) {
 	case ".jpg":
 		contentType = "image/jpeg"
@@ -101,7 +100,7 @@ func (a *manager) Upload(file multipart.File, fileName string, extension string)
 	result, err := a.Uploader.Upload(&s3manager.UploadInput{
 		ACL:         aws.String("public-read"),
 		Body:        file,
-		Bucket:      aws.String(c.S3Bucket),
+		Bucket:      aws.String(Config.S3Bucket),
 		ContentType: aws.String(contentType),
 		Key:         aws.String(a.Location + "/" + fileName),
 	})
@@ -115,9 +114,9 @@ func (a *manager) Upload(file multipart.File, fileName string, extension string)
 
 func (a *manager) Delete(location string, name string, version *string) error {
 	service := s3.New(a.Session)
-	_, _ = service.DeleteObject(&s3.DeleteObjectInput{Bucket: aws.String(c.S3Bucket), Key: aws.String(location + "/" + name), VersionId: version})
+	_, _ = service.DeleteObject(&s3.DeleteObjectInput{Bucket: aws.String(Config.S3Bucket), Key: aws.String(location + "/" + name), VersionId: version})
 	return service.WaitUntilObjectNotExists(&s3.HeadObjectInput{
-		Bucket: aws.String(c.S3Bucket),
+		Bucket: aws.String(Config.S3Bucket),
 		Key:    aws.String(location + "/" + name),
 	})
 }

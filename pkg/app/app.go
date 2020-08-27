@@ -7,7 +7,6 @@ import (
 )
 
 type Configure struct {
-	Version  int    `env:"VERSION" envDefault:"1"`
 	Mode     string `env:"APP_MODE" envDefault:"debug"`
 	AppHost  string `env:"APP_HOST" envDefault:"localhost"`
 	TimeZone string `env:"TIMEZONE" envDefault:"Asia/Seoul"`

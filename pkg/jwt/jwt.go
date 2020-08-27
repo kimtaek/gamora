@@ -14,10 +14,10 @@ type Configure struct {
 	Trt       int64  `env:"JWT_TRT" envDefault:"168"` // 7 days
 }
 
-var c Configure
+var Config Configure
 
 func Setup() {
-	_ = env.Parse(&c)
+	_ = env.Parse(&Config)
 }
 
 func ExtractToken(c *gin.Context) *string {
@@ -38,6 +38,6 @@ func Verify(token string) (*jwt.Token, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(c.JwtSecret), nil
+		return []byte(Config.JwtSecret), nil
 	})
 }

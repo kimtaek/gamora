@@ -7,7 +7,7 @@ import (
 	"net/url"
 )
 
-type config struct {
+type Configure struct {
 	URL string `env:"SLACK_URL" envDefault:"https://hooks.slack.com/services/zzz/xxx/yyy"`
 }
 
@@ -17,10 +17,10 @@ type Message struct {
 	Channel  string `json:"channel"`
 }
 
-var c config
+var Config Configure
 
 func Setup() {
-	_ = env.Parse(&c)
+	_ = env.Parse(&Config)
 }
 
 // SendSlackMessage
@@ -33,7 +33,7 @@ func SendMessage(s Message) {
 	}
 	p, _ := json.Marshal(s)
 	r, _ := http.PostForm(
-		c.URL,
+		Config.URL,
 		url.Values{
 			"payload": {string(p)},
 		},
