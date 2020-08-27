@@ -5,6 +5,7 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/fatih/color"
 	"github.com/gomodule/redigo/redis"
+	"github.com/kimtaek/gamora/pkg/slack"
 	"os"
 	"os/signal"
 	"syscall"
@@ -50,8 +51,15 @@ func Setup() {
 		},
 	}
 
+	if err := Ping(); err != nil {
+		slack.SendMessage(slack.Message{
+			Text: "Redis: " + err.Error(),
+		})
+		os.Exit(1)
+	}
+
 	cleanupHook()
-	_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[info]", "[redis cache server connected!]")
+	_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[info]", "[redis connected!]")
 }
 
 func Ping() error {
@@ -166,4 +174,16 @@ func SetExpires(key string, seconds int) {
 	if seconds != 0 {
 		_, _ = conn.Do("EXPIRE", key, seconds)
 	}
+}
+
+func GetKeyWithPrefix(prefix string, key string) string {
+	if prefix == "" {
+		prefix = "api"
+	}
+
+	if Config.Mode == "release" {
+		return fmt.Sprintf("production_%s_cache:%s", prefix, key)
+	}
+
+	return fmt.Sprintf("dev_%s_cache:%s", prefix, key)
 }
