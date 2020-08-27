@@ -5,13 +5,14 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/fatih/color"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/mysql" // import global
 	"github.com/kimtaek/gamora/pkg/slack"
 	"math"
 	"os"
 	"time"
 )
 
+// Model global basic model struct
 type Model struct {
 	ID        uint64     `form:"id" json:"id" gorm:"primary_key"`
 	CreatedBy uint64     `json:"-"`
@@ -22,6 +23,7 @@ type Model struct {
 	DeletedAt *time.Time `json:"-" sql:"index"`
 }
 
+// Configure config for db
 type Configure struct {
 	Database string `env:"MYSQL_DATABASE" envDefault:"database"`
 	Username string `env:"MYSQL_USERNAME" envDefault:"user"`
@@ -30,10 +32,13 @@ type Configure struct {
 	Port     string `env:"MYSQL_PORT" envDefault:"3306"`
 }
 
+// Config global defined db config
 var Config Configure
+
+// DB global defined db config
 var DB *gorm.DB
 
-// InitDatabase
+// Setup init db
 func Setup() {
 	_ = env.Parse(&Config)
 	connection, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
@@ -58,14 +63,17 @@ func Setup() {
 	_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[info]", "[database connected!]")
 }
 
+// Connection get db connection
 func Connection() *gorm.DB {
 	return DB
 }
 
+// CloseDB close db connection
 func CloseDB() {
 	defer DB.Close()
 }
 
+// PaginationParam for using pagination
 type PaginationParam struct {
 	DB          *gorm.DB
 	Page        int    `form:"page" json:"page"`
@@ -74,6 +82,7 @@ type PaginationParam struct {
 	OrderBySort string `form:"orderBySort" json:"orderBySort"`
 }
 
+// PaginationMeta for using pagination
 type PaginationMeta struct {
 	Total     int `json:"total"`
 	TotalPage int `json:"totalPage"`
@@ -84,11 +93,13 @@ type PaginationMeta struct {
 	NextPage  int `json:"nextPage"`
 }
 
+// Pagination for using pagination
 type Pagination struct {
 	Data interface{}    `json:"data"`
 	Meta PaginationMeta `json:"meta"`
 }
 
+// Paginate for using pagination
 func Paginate(p *PaginationParam, dataSource interface{}) *Pagination {
 	db := p.DB
 
@@ -149,6 +160,7 @@ func Paginate(p *PaginationParam, dataSource interface{}) *Pagination {
 	return &pagination
 }
 
+// totalCount for using pagination
 func totalCount(db *gorm.DB, countDataSource interface{}, done chan bool, count *int) {
 	db.Model(countDataSource).Count(count)
 	done <- true

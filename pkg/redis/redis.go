@@ -12,6 +12,7 @@ import (
 	"time"
 )
 
+// Configure config for redis
 type Configure struct {
 	Mode      string `env:"APP_MODE" envDefault:"debug"`
 	Host      string `env:"REDIS_HOST" envDefault:"localhost"`
@@ -22,9 +23,11 @@ type Configure struct {
 	MaxActive int    `env:"REDIS_MAX_ACTIVE" envDefault:"10"`
 }
 
+// Config global defined redis config
 var Config Configure
 var p *redis.Pool
 
+// Setup init redis
 func Setup() {
 	_ = env.Parse(&Config)
 	conTimeout := redis.DialConnectTimeout(240 * time.Second)
@@ -62,6 +65,7 @@ func Setup() {
 	_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[info]", "[redis connected!]")
 }
 
+// Ping check ping
 func Ping() error {
 	conn := p.Get()
 	defer conn.Close()
@@ -73,6 +77,7 @@ func Ping() error {
 	return nil
 }
 
+// cleanupHook check and clean
 func cleanupHook() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -85,6 +90,7 @@ func cleanupHook() {
 	}()
 }
 
+// Get get key
 func Get(key string) ([]byte, error) {
 	conn := p.Get()
 	defer conn.Close()
@@ -97,6 +103,7 @@ func Get(key string) ([]byte, error) {
 	return data, err
 }
 
+// Set set key with expires
 func Set(key string, value []byte, seconds int) error {
 	conn := p.Get()
 	defer conn.Close()
@@ -115,6 +122,7 @@ func Set(key string, value []byte, seconds int) error {
 	return err
 }
 
+// Exist check exist key
 func Exist(key string) (bool, error) {
 	conn := p.Get()
 	defer conn.Close()
@@ -126,6 +134,7 @@ func Exist(key string) (bool, error) {
 	return ok, err
 }
 
+// Delete delete key
 func Delete(key string) error {
 	conn := p.Get()
 	defer conn.Close()
@@ -134,6 +143,7 @@ func Delete(key string) error {
 	return err
 }
 
+// Deletes delete keys
 func Deletes(key string) error {
 	conn := p.Get()
 	defer conn.Close()
@@ -153,6 +163,7 @@ func Deletes(key string) error {
 	return nil
 }
 
+// Incr incr by key
 func Incr(key string) (int, error) {
 	conn := p.Get()
 	defer conn.Close()
@@ -160,6 +171,7 @@ func Incr(key string) (int, error) {
 	return redis.Int(conn.Do("INCR", key))
 }
 
+// IncrBy incr by key set special value
 func IncrBy(key string, value int) (int, error) {
 	conn := p.Get()
 	defer conn.Close()
@@ -167,6 +179,7 @@ func IncrBy(key string, value int) (int, error) {
 	return redis.Int(conn.Do("INCRBY", key, value))
 }
 
+// SetExpires set key expires
 func SetExpires(key string, seconds int) {
 	conn := p.Get()
 	defer conn.Close()
@@ -176,6 +189,7 @@ func SetExpires(key string, seconds int) {
 	}
 }
 
+// GetKeyWithPrefix return key with prefix
 func GetKeyWithPrefix(prefix string, key string) string {
 	if prefix == "" {
 		prefix = "api"

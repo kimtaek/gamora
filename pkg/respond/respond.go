@@ -6,6 +6,7 @@ import (
 	"net/http"
 )
 
+// Source defined response source
 type Source struct {
 	Code        int         `json:"-"`
 	Data        interface{} `json:"data"`
@@ -13,6 +14,7 @@ type Source struct {
 	MessageCode string      `json:"-"`
 }
 
+// Data response data
 func Data(c *gin.Context, s *Source) {
 	if s.Code == 0 {
 		s.Code = http.StatusOK
@@ -34,6 +36,7 @@ func Data(c *gin.Context, s *Source) {
 	return
 }
 
+// MessageByCode response by code
 func MessageByCode(c *gin.Context, code string) {
 	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 		"data":    nil,
@@ -43,6 +46,7 @@ func MessageByCode(c *gin.Context, code string) {
 	return
 }
 
+// MessageWithStatusByCode response with special status code
 func MessageWithStatusByCode(c *gin.Context, code string, status int) {
 	if status == 0 {
 		status = http.StatusBadRequest
@@ -56,6 +60,7 @@ func MessageWithStatusByCode(c *gin.Context, code string, status int) {
 	return
 }
 
+// Message response message with 400 code
 func Message(c *gin.Context, message string) {
 	c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 		"data":    nil,
@@ -65,6 +70,7 @@ func Message(c *gin.Context, message string) {
 	return
 }
 
+// MessageWithStatus response message with special status code
 func MessageWithStatus(c *gin.Context, message string, status int) {
 	if status == 0 {
 		status = http.StatusBadRequest

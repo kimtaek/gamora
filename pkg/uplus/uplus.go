@@ -16,6 +16,7 @@ import (
 	"time"
 )
 
+// Configure config for sms UPlus provider
 type Configure struct {
 	Mode               string `env:"APP_MODE" envDefault:"debug"`
 	AccessKey          string `env:"UPLUS_ACCESS_KEY" envDefault:""`
@@ -24,21 +25,25 @@ type Configure struct {
 	SendFrom           string `env:"SEND_FROM" envDefault:"13332"`
 }
 
-type responseJson struct {
+// responseJSON returned by UPlus provider
+type responseJSON struct {
 	Data struct {
-		GrpId string `json:"grp_id"`
-		MsgId string `json:"msg_id"`
+		GrpID string `json:"grp_id"`
+		MsgID string `json:"msg_id"`
 	} `json:"data"`
 	RDesc string `json:"rdesc"`
 	RCode string `json:"rcode"`
 }
 
+// Config global defined UPlus config
 var Config Configure
 
+// Setup init UPlus config
 func Setup() {
 	_ = env.Parse(&Config)
 }
 
+// SendSMS send sms with UPlus provider
 func SendSMS(phoneNumber string, message string) error {
 	if Config.UniversalTelephone == "82-1000000000" {
 		return nil
@@ -90,7 +95,7 @@ func SendSMS(phoneNumber string, message string) error {
 		return err
 	}
 
-	var data responseJson
+	var data responseJSON
 	err = json.NewDecoder(response.Body).Decode(&data)
 	defer response.Body.Close()
 
@@ -107,6 +112,7 @@ func SendSMS(phoneNumber string, message string) error {
 	return errors.New("error")
 }
 
+// hash generate api hash
 func hash(timestamp string, uuid string) string {
 	h := sha1.New()
 	h.Write([]byte(Config.AccessKey + timestamp + uuid + Config.SecretKey))

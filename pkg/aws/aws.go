@@ -15,6 +15,7 @@ import (
 	"strings"
 )
 
+// Configure config for aws
 type Configure struct {
 	Mode               string `env:"APP_MODE" envDefault:"debug"`
 	AccessKey          string `env:"AWS_ACCESS_KEY" envDefault:"AKIAZI..."`
@@ -24,19 +25,23 @@ type Configure struct {
 	UniversalTelephone string `env:"UNIVERSAL_TELEPHONE" envDefault:""`
 }
 
+// Config global defined aws config
 var Config Configure
 
+// Setup init aws config
 func Setup() {
 	_ = env.Parse(&Config)
 }
 
-type manager struct {
+// Manager aws manager
+type Manager struct {
 	Location string
 	Session  *session.Session
 	Uploader *s3manager.Uploader
 }
 
-func NewAws() *manager {
+// NewAws init aws service
+func NewAws() *Manager {
 	s := session.Must(session.NewSessionWithOptions(session.Options{
 		Config: aws.Config{
 			Credentials: credentials.NewStaticCredentialsFromCreds(credentials.Value{
@@ -47,13 +52,14 @@ func NewAws() *manager {
 		},
 	}))
 
-	return &manager{
+	return &Manager{
 		Session:  s,
 		Uploader: s3manager.NewUploader(s),
 	}
 }
 
-func (a *manager) SendSMS(phoneNumber string, message string) error {
+// SendSMS send sms with aws service
+func (a *Manager) SendSMS(phoneNumber string, message string) error {
 	if Config.UniversalTelephone == "82-1000000000" {
 		return nil
 	}
@@ -78,7 +84,8 @@ func (a *manager) SendSMS(phoneNumber string, message string) error {
 	return nil
 }
 
-func (a *manager) Upload(file multipart.File, fileName string, extension string) (url string, version *string, err error) {
+// Upload upload file to s3
+func (a *Manager) Upload(file multipart.File, fileName string, extension string) (url string, version *string, err error) {
 	if fileName == "" {
 		return "", nil, errors.New("file name not found")
 	}
@@ -112,7 +119,8 @@ func (a *manager) Upload(file multipart.File, fileName string, extension string)
 	return result.Location, result.VersionID, nil
 }
 
-func (a *manager) Delete(location string, name string, version *string) error {
+// Delete delete file from s3
+func (a *Manager) Delete(location string, name string, version *string) error {
 	service := s3.New(a.Session)
 	_, _ = service.DeleteObject(&s3.DeleteObjectInput{Bucket: aws.String(Config.S3Bucket), Key: aws.String(location + "/" + name), VersionId: version})
 	return service.WaitUntilObjectNotExists(&s3.HeadObjectInput{

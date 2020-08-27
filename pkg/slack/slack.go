@@ -7,23 +7,27 @@ import (
 	"net/url"
 )
 
+// Configure config for slack
 type Configure struct {
 	URL string `env:"SLACK_URL" envDefault:"https://hooks.slack.com/services/zzz/xxx/yyy"`
 }
 
+// Message defined message for slack
 type Message struct {
 	Text     string `json:"text"`
 	Username string `json:"username"`
 	Channel  string `json:"channel"`
 }
 
+// Config global defined slack config
 var Config Configure
 
+// Setup init slack config
 func Setup() {
 	_ = env.Parse(&Config)
 }
 
-// SendSlackMessage
+// SendMessage send slack message
 func SendMessage(s Message) {
 	if s.Text == "" {
 		return
@@ -41,6 +45,7 @@ func SendMessage(s Message) {
 	defer r.Body.Close()
 }
 
+// ExceptionChannel defined default exception channel
 func ExceptionChannel() string {
 	return "#exception"
 }

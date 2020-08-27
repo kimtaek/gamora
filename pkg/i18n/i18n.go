@@ -8,12 +8,15 @@ import (
 	"golang.org/x/text/language"
 )
 
+// Configure config for i18n
 type Configure struct {
 	SupportLanguages []language.Tag
 }
 
+// Config global defined i18n config
 var Config Configure
 
+// Setup init i18n config
 func Setup() {
 	_ = env.Parse(&Config)
 
@@ -25,6 +28,7 @@ func Setup() {
 	}
 }
 
+// GetLanguage parse request language
 func GetLanguage(ctx *gin.Context) string {
 	accept := ctx.GetHeader("Accept-Language")
 	if accept == "" {
@@ -44,6 +48,7 @@ func GetLanguage(ctx *gin.Context) string {
 	return t.String()
 }
 
+// GetI18nMessage return i18n message
 func GetI18nMessage(code string, lang string) string {
 	l := getLanguageFile(lang)
 	if m := l.Section(ini.DefaultSection).Key(code).String(); m != "" {
@@ -52,6 +57,7 @@ func GetI18nMessage(code string, lang string) string {
 	return l.Section(ini.DefaultSection).Key(i18n.LangCodeNotFoundMessage).String()
 }
 
+// getLanguageFile load i18n language files
 func getLanguageFile(lang string) *ini.File {
 	if ok, err := ini.Load("i18n/" + lang + ".ini"); err == nil {
 		return ok
