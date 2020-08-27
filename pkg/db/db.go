@@ -1,4 +1,4 @@
-package models
+package db
 
 import (
 	"fmt"
@@ -31,7 +31,7 @@ type Configure struct {
 }
 
 var Config Configure
-var db *gorm.DB
+var DB *gorm.DB
 
 // InitDatabase
 func Setup() {
@@ -53,17 +53,17 @@ func Setup() {
 
 	connection.LogMode(true)
 	connection.DB().SetConnMaxLifetime(time.Minute * 3)
-	db = connection
+	DB = connection
 
 	_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[info]", "[database connected!]")
 }
 
 func Connection() *gorm.DB {
-	return db
+	return DB
 }
 
 func CloseDB() {
-	defer db.Close()
+	defer DB.Close()
 }
 
 type PaginationParam struct {
