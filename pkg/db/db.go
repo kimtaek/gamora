@@ -82,21 +82,18 @@ type PaginationParam struct {
 	OrderBySort string `form:"orderBySort" json:"orderBySort"`
 }
 
-// PaginationMeta for using pagination
-type PaginationMeta struct {
-	Total     int `json:"total"`
-	TotalPage int `json:"totalPage"`
-	Offset    int `json:"offset"`
-	Limit     int `json:"limit"`
-	Page      int `json:"page"`
-	PrevPage  int `json:"prevPage"`
-	NextPage  int `json:"nextPage"`
-}
-
 // Pagination for using pagination
 type Pagination struct {
-	Data interface{}    `json:"data"`
-	Meta PaginationMeta `json:"meta"`
+	Data interface{} `json:"data"`
+	Meta struct {
+		Total     int `json:"total"`
+		TotalPage int `json:"totalPage"`
+		Offset    int `json:"offset"`
+		Limit     int `json:"limit"`
+		Page      int `json:"page"`
+		PrevPage  int `json:"prevPage"`
+		NextPage  int `json:"nextPage"`
+	} `json:"meta"`
 }
 
 // Paginate for using pagination
@@ -108,13 +105,6 @@ func Paginate(p *PaginationParam, dataSource interface{}) *Pagination {
 	}
 	if p.Limit == 0 {
 		p.Limit = 25
-	}
-	if len(p.OrderBy) > 0 {
-		for _, o := range p.OrderBy {
-			db = db.Order(o)
-		}
-	} else {
-		db = db.Order("id desc")
 	}
 
 	done := make(chan bool, 1)
