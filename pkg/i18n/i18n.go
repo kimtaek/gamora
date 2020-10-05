@@ -24,7 +24,9 @@ func Setup() {
 		language.English,            // en
 		language.Korean,             // ko
 		language.MustParse("ko-Kr"), //ko-Kr
-		language.SimplifiedChinese,  // zh-Hans
+		language.Chinese,            // zh
+		language.SimplifiedChinese,  // zh-Hans-CN
+		language.TraditionalChinese, // zh-Hant-HK
 	}
 }
 
@@ -43,6 +45,8 @@ func GetLanguage(ctx *gin.Context) string {
 		return "en"
 	case 1, 2:
 		return "ko"
+	case 3, 4, 5:
+		return "zh"
 	}
 
 	return t.String()
