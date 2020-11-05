@@ -6,10 +6,12 @@ import (
 	"github.com/go-ini/ini"
 	"github.com/kimtaek/gamora/constants/i18n"
 	"golang.org/x/text/language"
+	"strings"
 )
 
 // Configure config for i18n
 type Configure struct {
+	UserAgentTags    []string `env:"I18N_USERAGENT_TAGS" envDefault:"" envSeparator:":"` // lang-en:lang-ko:lang-ko:lang-zh:lang-zh:lang-zh:lang-jp:lang-jp
 	SupportLanguages []language.Tag
 }
 
@@ -23,22 +25,33 @@ func Setup() {
 	Config.SupportLanguages = []language.Tag{
 		language.English,            // en
 		language.Korean,             // ko
-		language.MustParse("ko-Kr"), //ko-Kr
+		language.MustParse("ko-kr"), // ko-kr
 		language.Chinese,            // zh
 		language.SimplifiedChinese,  // zh-Hans-CN
 		language.TraditionalChinese, // zh-Hant-HK
+		language.Japanese,           // ja
+		language.MustParse("ja-JP"), // ja-JP
 	}
 }
 
 // GetLanguage parse request language
 func GetLanguage(ctx *gin.Context) string {
-	accept := ctx.GetHeader("Accept-Language")
-	if accept == "" {
+	lang := ctx.GetHeader("Accept-Language")
+	if Config.UserAgentTags != nil {
+		userAgent := ctx.GetHeader("User-Agent")
+		for i, v := range Config.UserAgentTags {
+			if strings.Contains(userAgent, v) {
+				return Config.SupportLanguages[i].String()
+			}
+		}
+	}
+
+	if lang == "" {
 		return "ko"
 	}
 
 	matcher := language.NewMatcher(Config.SupportLanguages)
-	t, i := language.MatchStrings(matcher, accept)
+	t, i := language.MatchStrings(matcher, lang)
 
 	switch i {
 	case 0:
@@ -47,6 +60,8 @@ func GetLanguage(ctx *gin.Context) string {
 		return "ko"
 	case 3, 4, 5:
 		return "zh"
+	case 6, 7:
+		return "ja"
 	}
 
 	return t.String()
