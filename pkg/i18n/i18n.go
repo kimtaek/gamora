@@ -11,7 +11,7 @@ import (
 
 // Configure config for i18n
 type Configure struct {
-	UserAgentTags    []string `env:"I18N_USERAGENT_TAGS" envDefault:"" envSeparator:":"` // lang-en:lang-ko:lang-ko:lang-zh:lang-zh:lang-zh:lang-jp:lang-jp
+	UserAgentTags    []string `env:"I18N_USERAGENT_TAGS" envDefault:"" envSeparator:":"` // lang-en:lang-ko:lang-zh:lang-zh:lang-zh:lang-ja
 	SupportLanguages []language.Tag
 }
 
@@ -25,12 +25,10 @@ func Setup() {
 	Config.SupportLanguages = []language.Tag{
 		language.English,            // en
 		language.Korean,             // ko
-		language.MustParse("ko-kr"), // ko-kr
 		language.Chinese,            // zh
 		language.SimplifiedChinese,  // zh-Hans-CN
 		language.TraditionalChinese, // zh-Hant-HK
 		language.Japanese,           // ja
-		language.MustParse("ja-JP"), // ja-JP
 	}
 }
 
@@ -47,24 +45,22 @@ func GetLanguage(ctx *gin.Context) string {
 	}
 
 	if lang == "" {
-		return "ko"
+		return language.Korean.String()
 	}
 
 	matcher := language.NewMatcher(Config.SupportLanguages)
-	t, i := language.MatchStrings(matcher, lang)
+	_, i := language.MatchStrings(matcher, lang)
 
 	switch i {
+	default:
+		return language.Korean.String()
 	case 0:
-		return "en"
-	case 1, 2:
-		return "ko"
-	case 3, 4, 5:
-		return "zh"
-	case 6, 7:
-		return "ja"
+		return language.English.String()
+	case 2, 3, 4:
+		return language.Chinese.String()
+	case 5:
+		return language.Japanese.String()
 	}
-
-	return t.String()
 }
 
 // GetI18nMessage return i18n message
