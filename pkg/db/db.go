@@ -25,11 +25,12 @@ type Model struct {
 
 // Configure config for db
 type Configure struct {
-	Database string `env:"MYSQL_DATABASE" envDefault:"database"`
-	Username string `env:"MYSQL_USERNAME" envDefault:"user"`
-	Password string `env:"MYSQL_PASSWORD" envDefault:"password"`
-	Host     string `env:"MYSQL_HOST" envDefault:"localhost"`
-	Port     string `env:"MYSQL_PORT" envDefault:"3306"`
+	Database  string `env:"MYSQL_DATABASE" envDefault:"database"`
+	Username  string `env:"MYSQL_USERNAME" envDefault:"user"`
+	Password  string `env:"MYSQL_PASSWORD" envDefault:"password"`
+	Host      string `env:"MYSQL_HOST" envDefault:"localhost"`
+	SlaveHost string `env:"MYSQL_SLAVE_HOST" envDefault:""`
+	Port      string `env:"MYSQL_PORT" envDefault:"3306"`
 }
 
 // Config global defined db config
@@ -37,6 +38,9 @@ var Config Configure
 
 // DB global defined db config
 var DB *gorm.DB
+
+// SlaveDB global defined db config
+var SlaveDB *gorm.DB
 
 // Setup init db
 func Setup() {
@@ -59,6 +63,26 @@ func Setup() {
 	connection.LogMode(true)
 	connection.DB().SetConnMaxLifetime(time.Minute * 3)
 	DB = connection
+	SlaveDB = connection
+
+	if Config.SlaveHost != "" {
+		slaveConnection, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+			Config.Username,
+			Config.Password,
+			Config.SlaveHost,
+			Config.Port,
+			Config.Database,
+		))
+
+		if err != nil {
+			_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[warning]", "[slave database connection failed, using master host]")
+			slaveConnection = DB
+		}
+
+		slaveConnection.LogMode(true)
+		slaveConnection.DB().SetConnMaxLifetime(time.Minute * 3)
+		SlaveDB = slaveConnection
+	}
 
 	_, _ = color.New(color.FgWhite).Println(time.Now().Format(time.RFC3339), "[info]", "[database connected!]")
 }
@@ -68,9 +92,15 @@ func Connection() *gorm.DB {
 	return DB
 }
 
+// SlaveConnection get db connection
+func SlaveConnection() *gorm.DB {
+	return SlaveDB
+}
+
 // CloseDB close db connection
 func CloseDB() {
 	defer DB.Close()
+	defer SlaveDB.Close()
 }
 
 // PaginationParam for using pagination
