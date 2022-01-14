@@ -5,11 +5,11 @@ go 1.14
 require (
 	github.com/aws/aws-sdk-go v1.34.11
 	github.com/caarlos0/env v3.5.0+incompatible
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/fatih/color v1.9.0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-ini/ini v1.60.1
-	github.com/gomodule/redigo v1.8.2
+	github.com/gomodule/redigo v1.8.8 // indirect
 	github.com/jinzhu/gorm v1.9.16
 	github.com/oschwald/geoip2-golang v1.4.0
 	github.com/smartystreets/goconvey v1.6.4 // indirect

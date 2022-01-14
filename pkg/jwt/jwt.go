@@ -3,8 +3,8 @@ package jwt
 import (
 	"fmt"
 	"github.com/caarlos0/env"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"strings"
 )
 
